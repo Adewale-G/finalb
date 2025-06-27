@@ -208,55 +208,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // inside contexts/AuthContext.tsx
 
-const signUp = async (formData: any) => {
-  try {
-    // 1. Sign up with Supabase Auth
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-    });
+import { supabase } from '../lib/supabaseClient';
 
-    if (signUpError || !data.user) return { error: signUpError };
+export const signUp = async (formData: any) => {
+  const {
+    email,
+    password,
+    full_name,
+    username,
+    date_of_birth,
+    phone,
+    address,
+    role,
+    faculty_id,
+    faculty_name,
+    department_id,
+    department_name,
+    matric_number,
+    staff_id,
+  } = formData;
 
-    // 2. Pick random avatar
-    const avatarNames = [
-      'one.jpeg', 'two.jpeg', 'three.jpeg', 'four.jpeg', 'five.jpeg',
-      'six.jpeg', 'seven.jpeg', 'eight.jpeg', 'nine.jpeg', 'ten.jpeg',
-      'eleven.jpeg', 'twelve.jpeg', 'thirteen.jpeg', 'fourteen.jpeg',
-      'fifteen.jpeg', 'sixteen.jpeg', 'seventeen.jpeg', 'eighteen.jpeg',
-    ];
-    const randomAvatar = avatarNames[Math.floor(Math.random() * avatarNames.length)];
-    const avatar_url = `/avatars/${randomAvatar}`;
+  // ✅ Random avatar selection from /public
+  const avatarFileNames = [
+    'one.jpeg', 'two.jpeg', 'three.jpeg', 'four.jpeg', 'five.jpeg',
+    'six.jpeg', 'seven.jpeg', 'eight.jpeg', 'nine.jpeg', 'ten.jpeg',
+    'eleven.jpeg', 'twelve.jpeg', 'thirteen.jpeg', 'fourteen.jpeg',
+    'fifteen.jpeg', 'sixteen.jpeg', 'seventeen.jpeg', 'eighteen.jpeg',
+  ];
+  const randomAvatar = avatarFileNames[Math.floor(Math.random() * avatarFileNames.length)];
+  const avatar_url = `/${randomAvatar}`; // ✅ no /avatars/ prefix
 
-    // 3. Insert profile data
-    const { error: profileError } = await supabase.from('profiles').insert([
-      {
-        id: data.user.id,
-        full_name: formData.full_name,
-        email: formData.email,
-        username: formData.username,
-        date_of_birth: formData.date_of_birth,
-        phone: formData.phone,
-        address: formData.address,
-        role: formData.role,
-        faculty_id: formData.faculty_id,
-        faculty_name: formData.faculty_name,
-        department_id: formData.department_id,
-        department_name: formData.department_name,
-        matric_number: formData.matric_number || null,
-        staff_id: formData.staff_id || null,
-        avatar_url,
-      }
-    ]);
+  // ✅ Create user in Supabase Auth
+  const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+  });
 
-    if (profileError) return { error: profileError };
-
-    return { error: null };
-  } catch (err) {
-    console.error('Signup error:', err);
-    return { error: err };
+  if (signUpError || !authData?.user) {
+    console.error('Auth signUp error:', signUpError?.message);
+    return { error: signUpError };
   }
+
+  const user_id = authData.user.id;
+
+  // ✅ Insert into profiles table
+  const { error: profileError } = await supabase.from('profiles').insert({
+    id: user_id,
+    email,
+    full_name,
+    username,
+    avatar_url,
+    date_of_birth,
+    phone,
+    address,
+    role,
+    faculty_id,
+    faculty_name,
+    department_id,
+    department_name,
+    matric_number: role === 'student' ? matric_number : null,
+    staff_id: role !== 'student' ? staff_id : null,
+  });
+
+  if (profileError) {
+    console.error('Profile insert error:', profileError.message);
+    return { error: profileError };
+  }
+
+  return { user: authData.user };
 };
+
 
 
   const switchRole = (role: UserRole) => {
