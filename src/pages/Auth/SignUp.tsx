@@ -15,35 +15,30 @@ interface Department {
   faculty_id: string;
 }
 
-const SignUp: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    // Step 1: Basic Info
-    full_name: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-    
-    // Step 2: Personal Info
-    date_of_birth: '',
-    phone: '',
-    address: '',
-    
-    // Step 3: Academic Info
-    role: 'student' as 'student' | 'lecturer' | 'admin',
-    faculty_id: '',
-    department_id: '',
-    matric_number: '',
-    staff_id: ''
-  });
-
+const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const [formData, setFormData] = useState<any>({
+    full_name: '',
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    date_of_birth: '',
+    phone: '',
+    address: '',
+    role: 'student',
+    faculty_id: '',
+    department_id: '',
+    matric_number: '',
+    staff_id: ''
+  });
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -59,7 +54,6 @@ const SignUp: React.FC = () => {
   }, [formData.faculty_id]);
 
   const fetchFaculties = async () => {
-    // Mock faculties for demo
     const mockFaculties = [
       { id: '1', name: 'COPAS', full_name: 'College of Pure and Applied Sciences' },
       { id: '2', name: 'COLENSMA', full_name: 'College of Environmental Sciences and Management' },
@@ -71,7 +65,6 @@ const SignUp: React.FC = () => {
   };
 
   const fetchDepartments = async (facultyId: string) => {
-    // Mock departments for demo
     const mockDepartments: Record<string, Department[]> = {
       '1': [
         { id: '1', name: 'Computer Science', faculty_id: '1' },
@@ -106,12 +99,8 @@ const SignUp: React.FC = () => {
       [name]: value
     }));
 
-    // Reset department when faculty changes
     if (name === 'faculty_id') {
-      setFormData(prev => ({
-        ...prev,
-        department_id: ''
-      }));
+      setFormData(prev => ({ ...prev, department_id: '' }));
     }
   };
 
@@ -169,371 +158,106 @@ const SignUp: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateStep(3)) return;
-
     setLoading(true);
     setError('');
 
-    // Add faculty and department names to form data
     const selectedFaculty = faculties.find(f => f.id === formData.faculty_id);
     const selectedDepartment = departments.find(d => d.id === formData.department_id);
 
+    const avatarList = [
+      'one.jpeg', 'two.jpeg', 'three.jpeg', 'four.jpeg', 'five.jpeg', 'six.jpeg',
+      'seven.jpeg', 'eight.jpeg', 'nine.jpeg', 'ten.jpeg', 'eleven.jpeg', 'twelve.jpeg',
+      'thirteen.jpeg', 'fourteen.jpeg', 'fifteen.jpeg', 'sixteen.jpeg', 'seventeen.jpeg', 'eighteen.jpeg'
+    ];
+    const randomAvatar = avatarList[Math.floor(Math.random() * avatarList.length)];
+    const avatarUrl = `/${randomAvatar}`;
+
     const signupData = {
       ...formData,
+      avatar_url: avatarUrl,
       faculty_name: selectedFaculty?.name,
       department_name: selectedDepartment?.name
     };
 
     const { error } = await signUp(signupData);
-    
     if (error) {
       setError('Registration failed. Please try again.');
       setLoading(false);
     } else {
-      navigate('/', { 
-        state: { 
-          message: 'Account created successfully! Welcome to Pineappl.' 
+      navigate('/', {
+        state: {
+          message: 'Account created successfully! Welcome to Pineappl.'
         }
       });
     }
   };
 
-  const renderStep1 = () => (
-    <div className="space-y-3">
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Basic Information</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-xs">Let's start with your basic details</p>
-      </div>
-
-      <div className="relative">
-        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="text"
-          name="full_name"
-          placeholder="Full Name"
-          value={formData.full_name}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-          required
-        />
-      </div>
-
-      <div className="relative">
-        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email Address"
-          value={formData.email}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-          required
-        />
-      </div>
-
-      <div className="relative">
-        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-          required
-        />
-      </div>
-
-      <div className="relative">
-        <input
-          type={showPassword ? 'text' : 'password'}
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10 text-sm"
-          required
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
-        >
-          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      </div>
-
-      <div className="relative">
-        <input
-          type={showConfirmPassword ? 'text' : 'password'}
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10 text-sm"
-          required
-        />
-        <button
-          type="button"
-          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
-        >
-          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="space-y-3">
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Personal Information</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-xs">Tell us more about yourself</p>
-      </div>
-
-      <div className="relative">
-        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="date"
-          name="date_of_birth"
-          value={formData.date_of_birth}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-          required
-        />
-      </div>
-
-      <div className="relative">
-        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Phone Number"
-          value={formData.phone}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-          required
-        />
-      </div>
-
-      <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="text"
-          name="address"
-          placeholder="Address (Optional)"
-          value={formData.address}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-        />
-      </div>
-    </div>
-  );
-
-  const renderStep3 = () => (
-    <div className="space-y-3">
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Academic Information</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-xs">Complete your academic profile</p>
-      </div>
-
-      <div>
-        <select
-          name="role"
-          value={formData.role}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-        >
-          <option value="student">Student</option>
-          <option value="lecturer">Lecturer</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-
-      <div className="relative">
-        <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <select
-          name="faculty_id"
-          value={formData.faculty_id}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-          required
-        >
-          <option value="">Select Faculty</option>
-          {faculties.map(faculty => (
-            <option key={faculty.id} value={faculty.id}>
-              {faculty.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="relative">
-        <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <select
-          name="department_id"
-          value={formData.department_id}
-          onChange={handleInputChange}
-          className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-          required
-          disabled={!formData.faculty_id}
-        >
-          <option value="">Select Department</option>
-          {departments.map(department => (
-            <option key={department.id} value={department.id}>
-              {department.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {formData.role === 'student' && (
-        <div>
-          <input
-            type="text"
-            name="matric_number"
-            placeholder="Matriculation Number"
-            value={formData.matric_number}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-            required
-          />
-        </div>
-      )}
-
-      {(formData.role === 'lecturer' || formData.role === 'admin') && (
-        <div>
-          <input
-            type="text"
-            name="staff_id"
-            placeholder="Staff ID"
-            value={formData.staff_id}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-            required
-          />
-        </div>
-      )}
-    </div>
-  );
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900">
-      {/* Sign Up Card */}
-      <div className="w-full max-w-sm">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-          {/* Header */}
-          <div className="text-center mb-4">
-            <div className="flex items-center justify-center mb-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                <School className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Pineappl</h1>
-            <p className="text-gray-600 dark:text-gray-400 text-xs">Academic Performance Platform</p>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="flex mb-4">
-            <button 
-              onClick={() => navigate('/signin')}
-              className="flex-1 py-2 px-3 text-center text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-l-lg font-medium hover:text-gray-900 dark:hover:text-white transition-colors text-sm"
-            >
-              SIGN IN
-            </button>
-            <button className="flex-1 py-2 px-3 text-center text-white bg-emerald-600 rounded-r-lg font-medium text-sm">
-              SIGN UP
-            </button>
-          </div>
-
-          {/* Progress Indicator */}
-          <div className="flex items-center justify-center mb-4">
-            {[1, 2, 3].map((step) => (
-              <React.Fragment key={step}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                  step <= currentStep 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
-                }`}>
-                  {step}
-                </div>
-                {step < 3 && (
-                  <div className={`w-6 h-0.5 ${
-                    step < currentStep ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-gray-600'
-                  }`}></div>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-3 p-2 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-xs">
-              {error}
-            </div>
-          )}
-
-          {/* Form Steps */}
-          <form onSubmit={handleSubmit}>
-            {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
-
-            {/* Navigation Buttons */}
-            <div className="flex space-x-2 mt-4">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={handlePrevious}
-                  className="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-700 dark:text-white font-semibold py-2.5 px-3 rounded-lg transition-colors text-sm"
-                >
-                  Previous
-                </button>
-              )}
-              
-              {currentStep < 3 ? (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm"
-                >
-                  <span>Next</span>
-                  <ArrowRight className="h-3 w-3" />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm"
-                >
-                  {loading ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      <span>CREATE</span>
-                      <ArrowRight className="h-3 w-3" />
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </form>
-
-          {/* Sign In Link */}
-          <div className="text-center mt-3">
-            <p className="text-gray-600 dark:text-gray-400 text-xs">
-              Already have an account?{' '}
-              <button 
-                onClick={() => navigate('/signin')}
-                className="text-emerald-600 hover:text-emerald-700 transition-colors"
-              >
-                Sign In
-              </button>
-            </p>
-          </div>
+    <div className="flex items-center justify-center min-h-screen text-white bg-gray-900">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md bg-gray-800 p-6 rounded-xl space-y-4 shadow-md"
+      >
+        <div className="text-center">
+          <School className="mx-auto h-8 w-8 text-emerald-500" />
+          <h1 className="text-2xl font-bold mt-2">Sign Up for Pineappl</h1>
+          <p className="text-sm text-gray-400">Academic Performance Platform</p>
         </div>
-      </div>
+
+        {error && <div className="text-sm text-red-400">{error}</div>}
+
+        {currentStep === 1 && (
+          <>
+            <input name="full_name" value={formData.full_name} onChange={handleInputChange} placeholder="Full Name" className="input" />
+            <input name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="input" />
+            <input name="username" value={formData.username} onChange={handleInputChange} placeholder="Username" className="input" />
+            <input name="password" type={showPassword ? 'text' : 'password'} value={formData.password} onChange={handleInputChange} placeholder="Password" className="input" />
+            <input name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={formData.confirmPassword} onChange={handleInputChange} placeholder="Confirm Password" className="input" />
+          </>
+        )}
+
+        {currentStep === 2 && (
+          <>
+            <input name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleInputChange} className="input" />
+            <input name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Phone" className="input" />
+            <input name="address" value={formData.address} onChange={handleInputChange} placeholder="Address (Optional)" className="input" />
+          </>
+        )}
+
+        {currentStep === 3 && (
+          <>
+            <select name="role" value={formData.role} onChange={handleInputChange} className="input">
+              <option value="student">Student</option>
+              <option value="lecturer">Lecturer</option>
+              <option value="admin">Admin</option>
+            </select>
+            <select name="faculty_id" value={formData.faculty_id} onChange={handleInputChange} className="input">
+              <option value="">Select Faculty</option>
+              {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+            <select name="department_id" value={formData.department_id} onChange={handleInputChange} className="input">
+              <option value="">Select Department</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+            {formData.role === 'student' && <input name="matric_number" value={formData.matric_number} onChange={handleInputChange} placeholder="Matric Number" className="input" />}
+            {(formData.role === 'lecturer' || formData.role === 'admin') && <input name="staff_id" value={formData.staff_id} onChange={handleInputChange} placeholder="Staff ID" className="input" />}
+          </>
+        )}
+
+        <div className="flex justify-between">
+          {currentStep > 1 && (
+            <button type="button" onClick={handlePrevious} className="btn-secondary">Previous</button>
+          )}
+          {currentStep < 3 ? (
+            <button type="button" onClick={handleNext} className="btn-primary">Next</button>
+          ) : (
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Creating...' : 'Create Account'}
+            </button>
+          )}
+        </div>
+      </form>
     </div>
   );
 };
