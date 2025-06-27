@@ -206,10 +206,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
-  const signUp = async (data: any) => {
-    // Use the same UUID fallback logic if needed here
+  // inside contexts/AuthContext.tsx
+
+const signUp = async (formData: any) => {
+  try {
+    // 1. Sign up with Supabase Auth
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (signUpError || !data.user) return { error: signUpError };
+
+    // 2. Pick random avatar
+    const avatarNames = [
+      'one.jpeg', 'two.jpeg', 'three.jpeg', 'four.jpeg', 'five.jpeg',
+      'six.jpeg', 'seven.jpeg', 'eight.jpeg', 'nine.jpeg', 'ten.jpeg',
+      'eleven.jpeg', 'twelve.jpeg', 'thirteen.jpeg', 'fourteen.jpeg',
+      'fifteen.jpeg', 'sixteen.jpeg', 'seventeen.jpeg', 'eighteen.jpeg',
+    ];
+    const randomAvatar = avatarNames[Math.floor(Math.random() * avatarNames.length)];
+    const avatar_url = `/avatars/${randomAvatar}`;
+
+    // 3. Insert profile data
+    const { error: profileError } = await supabase.from('profiles').insert([
+      {
+        id: data.user.id,
+        full_name: formData.full_name,
+        email: formData.email,
+        username: formData.username,
+        date_of_birth: formData.date_of_birth,
+        phone: formData.phone,
+        address: formData.address,
+        role: formData.role,
+        faculty_id: formData.faculty_id,
+        faculty_name: formData.faculty_name,
+        department_id: formData.department_id,
+        department_name: formData.department_name,
+        matric_number: formData.matric_number || null,
+        staff_id: formData.staff_id || null,
+        avatar_url,
+      }
+    ]);
+
+    if (profileError) return { error: profileError };
+
     return { error: null };
-  };
+  } catch (err) {
+    console.error('Signup error:', err);
+    return { error: err };
+  }
+};
+
 
   const switchRole = (role: UserRole) => {
     if (user) {
