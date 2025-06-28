@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
+// === Types ===
 type UserRole = 'student' | 'lecturer' | 'admin';
 
 interface User {
@@ -33,20 +34,17 @@ interface ProfileUpdateData {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (data: any) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>; 
+  signUp: (data: any) => Promise<{ error: any }>; 
   signOut: () => Promise<void>;
   switchRole: (role: UserRole) => void;
   updateUserProfile: (data: ProfileUpdateData) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -60,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
 
-        if (session) {
+        if (session?.user?.id) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select(`id, email, full_name, role, bio, phone, address, date_of_birth, avatar_url, departments(name), faculties(name)`)
@@ -69,21 +67,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (profileError) throw profileError;
 
-          if (profile) {
-            setUser({
-              id: profile.id,
-              name: profile.full_name,
-              email: profile.email,
-              role: profile.role,
-              department: profile.departments?.name,
-              faculty: profile.faculties?.name,
-              avatarUrl: profile.avatar_url,
-              bio: profile.bio,
-              phone: profile.phone,
-              address: profile.address,
-              dateOfBirth: profile.date_of_birth
-            });
-          }
+          setUser({
+            id: profile.id,
+            name: profile.full_name,
+            email: profile.email,
+            role: profile.role,
+            department: profile.departments?.name,
+            faculty: profile.faculties?.name,
+            avatarUrl: profile.avatar_url,
+            bio: profile.bio,
+            phone: profile.phone,
+            address: profile.address,
+            dateOfBirth: profile.date_of_birth
+          });
         } else {
           const savedUser = localStorage.getItem('pineappl_user');
           if (savedUser) setUser(JSON.parse(savedUser));
@@ -95,13 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
       }
     };
-
     checkSession();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -112,18 +106,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: 'Demo User',
           email,
           role: email.includes('admin') ? 'admin' : email.includes('lecturer') ? 'lecturer' : 'student',
-          department: 'Demo Department',
-          faculty: 'Demo Faculty',
+          department: 'Computer Science',
+          faculty: 'COPAS',
           avatarUrl: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
-          bio: 'Demo account',
-          phone: '+234 800 000 0000',
-          address: 'Demo Address',
+          bio: 'Demo user',
+          phone: '+2340000000000',
+          address: 'Campus',
           dateOfBirth: '2000-01-01'
         };
-
         localStorage.setItem('pineappl_user', JSON.stringify(demoUser));
         setUser(demoUser);
-        setLoading(false);
         return { error: null };
       }
 
@@ -136,31 +128,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (profileError) return { error: profileError };
 
-        if (profile) {
-          const userProfile: User = {
-            id: profile.id,
-            name: profile.full_name,
-            email: profile.email,
-            role: profile.role,
-            department: profile.departments?.name,
-            faculty: profile.faculties?.name,
-            avatarUrl: profile.avatar_url,
-            bio: profile.bio,
-            phone: profile.phone,
-            address: profile.address,
-            dateOfBirth: profile.date_of_birth
-          };
+        const userProfile: User = {
+          id: profile.id,
+          name: profile.full_name,
+          email: profile.email,
+          role: profile.role,
+          department: profile.departments?.name,
+          faculty: profile.faculties?.name,
+          avatarUrl: profile.avatar_url,
+          bio: profile.bio,
+          phone: profile.phone,
+          address: profile.address,
+          dateOfBirth: profile.date_of_birth
+        };
 
-          localStorage.setItem('pineappl_user', JSON.stringify(userProfile));
-          setUser(userProfile);
-        }
+        localStorage.setItem('pineappl_user', JSON.stringify(userProfile));
+        setUser(userProfile);
       }
-
-      setLoading(false);
       return { error: null };
     } catch (error) {
-      setLoading(false);
       return { error };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -175,26 +164,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       address,
       role,
       faculty_id,
-      faculty_name,
       department_id,
-      department_name,
       matric_number,
-      staff_id,
+      staff_id
     } = formData;
 
-    const avatarFileNames = [
-      'one.jpeg', 'two.jpeg', 'three.jpeg', 'four.jpeg', 'five.jpeg',
-      'six.jpeg', 'seven.jpeg', 'eight.jpeg', 'nine.jpeg', 'ten.jpeg',
-      'eleven.jpeg', 'twelve.jpeg', 'thirteen.jpeg', 'fourteen.jpeg',
-      'fifteen.jpeg', 'sixteen.jpeg', 'seventeen.jpeg', 'eighteen.jpeg',
-    ];
-    const randomAvatar = avatarFileNames[Math.floor(Math.random() * avatarFileNames.length)];
-    const avatar_url = `/${randomAvatar}`;
+    const isValidUUID = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+    const safeFacultyId = isValidUUID(faculty_id) ? faculty_id : null;
+    const safeDepartmentId = isValidUUID(department_id) ? department_id : null;
 
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({ email, password });
+    const avatars = ['one.jpeg','two.jpeg','three.jpeg','four.jpeg','five.jpeg','six.jpeg','seven.jpeg','eight.jpeg','nine.jpeg','ten.jpeg','eleven.jpeg','twelve.jpeg','thirteen.jpeg','fourteen.jpeg','fifteen.jpeg','sixteen.jpeg','seventeen.jpeg','eighteen.jpeg'];
+    const avatar_url = `/${avatars[Math.floor(Math.random() * avatars.length)]}`;
+
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: {
+      full_name,
+      username,
+      role,
+      avatar_url,
+      date_of_birth,
+      phone,
+      address,
+      faculty_id: safeFacultyId,
+      department_id: safeDepartmentId,
+      matric_number: role === 'student' ? matric_number : null,
+      staff_id: role !== 'student' ? staff_id : null
+    }
+  }
+});
+
 
     if (signUpError || !authData?.user) {
-      console.error('Auth signUp error:', signUpError?.message);
+      console.error('❌ Supabase Auth error:', signUpError);
       return { error: signUpError };
     }
 
@@ -210,20 +214,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       phone,
       address,
       role,
-      faculty_id,
-      faculty_name,
-      department_id,
-      department_name,
+      faculty_id: safeFacultyId,
+      department_id: safeDepartmentId,
       matric_number: role === 'student' ? matric_number : null,
       staff_id: role !== 'student' ? staff_id : null,
+      is_verified: false,
+      interests: null,
+      emergency_contact: null
     });
 
     if (profileError) {
-      console.error('Profile insert error:', profileError.message);
+      console.error('❌ Profile insert error:', profileError);
       return { error: profileError };
     }
 
-    return { user: authData.user };
+    return { user: authData.user, error: null };
   };
 
   const signOut = async () => {
